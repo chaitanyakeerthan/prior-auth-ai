@@ -7,10 +7,18 @@ services:
     envVars:
       - key: SPRING_PROFILES_ACTIVE
         value: prod
-      - key: DATABASE_URL
+      - key: DB_HOST
         fromDatabase:
           name: mediauth-db
-          property: connectionURI
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: mediauth-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: mediauth-db
+          property: database
       - key: DB_USERNAME
         fromDatabase:
           name: mediauth-db
