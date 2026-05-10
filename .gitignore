@@ -1,0 +1,20 @@
+# ── Java / Maven ──────────────────────────────────────────────
+backend/target/
+backend/*.mv.db
+backend/*.trace.db
+backend/.idea/
+backend/*.iml
+
+# ── Node / Frontend ──────────────────────────────────────────
+frontend/prior-auth/node_modules/
+frontend/prior-auth/dist/
+frontend/prior-auth/.env.local
+
+# ── IDE ──────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.iml
+
+# ── OS ───────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
