@@ -19,6 +19,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -29,7 +30,7 @@ public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
 
-    @Value("${app.cors.allowed-origins}")
+    @Value("${app.cors.allowed-origins:}")
     private String allowedOrigins;
 
     @Bean
@@ -54,15 +55,26 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        // Split and trim origins from env var
+        // Always-allowed origins (hardcoded so it works regardless of env vars)
+        List<String> origins = new ArrayList<>(List.of(
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+            "https://mediauth-gamma.vercel.app"
+        ));
+
+        // Also add any origins from environment variable
         if (allowedOrigins != null && !allowedOrigins.isEmpty()) {
-            List<String> origins = Arrays.stream(allowedOrigins.split(","))
-                    .map(String::trim)
-                    .filter(s -> !s.isEmpty())
-                    .toList();
-            config.setAllowedOrigins(origins);
+            Arrays.stream(allowedOrigins.split(","))
+                  .map(String::trim)
+                  .filter(s -> !s.isEmpty())
+                  .forEach(origin -> {
+                      if (!origins.contains(origin)) {
+                          origins.add(origin);
+                      }
+                  });
         }
 
+        config.setAllowedOrigins(origins);
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setExposedHeaders(List.of("Authorization"));
@@ -75,9 +87,8 @@ public class SecurityConfig {
     }
 
     /**
-     * Register a high-priority CorsFilter BEFORE Spring Security's filter chain.
-     * This ensures CORS preflight OPTIONS requests are handled even if
-     * Spring Security would otherwise block them.
+     * High-priority CorsFilter that runs BEFORE Spring Security's filter chain.
+     * This ensures CORS preflight OPTIONS requests are always handled properly.
      */
     @Bean
     @Order(Ordered.HIGHEST_PRECEDENCE)

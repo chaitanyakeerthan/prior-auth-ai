@@ -32,7 +32,8 @@ services:
       - key: GOOGLE_CLIENT_ID
         sync: false
       - key: CORS_ORIGINS
-        sync: false
+        value: https://mediauth-gamma.vercel.app
+    healthCheckPath: /api/health
 
 databases:
   - name: mediauth-db
