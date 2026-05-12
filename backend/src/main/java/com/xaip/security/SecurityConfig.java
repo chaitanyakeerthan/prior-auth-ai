@@ -4,8 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -36,7 +34,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .cors(org.springframework.security.config.Customizer.withDefaults())
             .csrf(csrf -> csrf.disable())
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
@@ -55,28 +53,26 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        // Always-allowed origins (hardcoded so it works regardless of env vars)
+        // Hardcoded fallback origins to ensure it always works for your domains
         List<String> origins = new ArrayList<>(List.of(
             "http://localhost:5173",
             "http://127.0.0.1:5173",
             "https://mediauth-gamma.vercel.app"
         ));
 
-        // Also add any origins from environment variable
+        // Add origins from properties if present
         if (allowedOrigins != null && !allowedOrigins.isEmpty()) {
             Arrays.stream(allowedOrigins.split(","))
                   .map(String::trim)
                   .filter(s -> !s.isEmpty())
                   .forEach(origin -> {
-                      if (!origins.contains(origin)) {
-                          origins.add(origin);
-                      }
+                      if (!origins.contains(origin)) origins.add(origin);
                   });
         }
 
         config.setAllowedOrigins(origins);
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
-        config.setAllowedHeaders(List.of("*"));
+        config.setAllowedHeaders(List.of("*")); // Allow all headers
         config.setExposedHeaders(List.of("Authorization"));
         config.setAllowCredentials(true);
         config.setMaxAge(3600L);
@@ -84,16 +80,6 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
-    }
-
-    /**
-     * High-priority CorsFilter that runs BEFORE Spring Security's filter chain.
-     * This ensures CORS preflight OPTIONS requests are always handled properly.
-     */
-    @Bean
-    @Order(Ordered.HIGHEST_PRECEDENCE)
-    public org.springframework.web.filter.CorsFilter corsFilter() {
-        return new org.springframework.web.filter.CorsFilter(corsConfigurationSource());
     }
 
     @Bean

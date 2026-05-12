@@ -36,6 +36,6 @@ public class PredictionController {
 
     @GetMapping("/health")
     public ResponseEntity<String> health() {
-        return ResponseEntity.ok("healthy");
+        return ResponseEntity.ok("healthy - version 1.0.2 - " + System.currentTimeMillis());
     }
 }
